@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learning Product LP Framework</title>
+  <meta name="description" content="Click/tap based learning product LP framework for ACTS and ABDT.">
+  <style>
+    :root {
+      --ink: #f7f0e5;
+      --muted: rgba(247, 240, 229, .68);
+      --line: rgba(247, 240, 229, .14);
+      --gold: #d7b46a;
+      --cyan: #65d8ff;
+      --cta: #e8622c;
+      --cta-ink: #fff;
+      --dark: #050608;
+      --dark-2: #090b0f;
+      --font: "Noto Sans TC", "Microsoft JhengHei UI", "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+      --mono: Arial, "Helvetica Neue", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--dark);
+      color: var(--ink);
+      font-family: var(--font);
+      letter-spacing: 0;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    img { display: block; max-width: 100%; }
+    a { color: inherit; }
+
+    .lp-shell {
+      min-height: 100svh;
+      display: grid;
+      background: var(--dark);
+    }
+
+    .visual-rail {
+      position: relative;
+      overflow: hidden;
+      min-height: 48svh;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(232, 98, 44, .22), transparent 18rem),
+        radial-gradient(circle at 70% 68%, rgba(101, 216, 255, .18), transparent 18rem),
+        linear-gradient(135deg, #efe2d4, #9db8c0);
+    }
+
+    .visual-layer {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      background-image: var(--image);
+      background-size: cover;
+      background-position: var(--pos, center);
+      transform: scale(1.035);
+      transition: opacity 520ms ease, transform 1200ms ease, background-position 900ms ease;
+      will-change: opacity, transform;
+    }
+
+    .visual-layer.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .visual-rail::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, transparent 62%, rgba(5, 6, 8, .36)),
+        linear-gradient(90deg, rgba(5, 6, 8, .02), rgba(5, 6, 8, .16));
+    }
+
+    .visual-fallback {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      color: rgba(5, 6, 8, .58);
+      font-size: clamp(24px, 5vw, 58px);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .content-rail {
+      position: relative;
+      min-height: 52svh;
+      background: var(--dark);
+      overflow: hidden;
+    }
+
+    .top-tools {
+      position: fixed;
+      top: max(12px, env(safe-area-inset-top));
+      right: 16px;
+      z-index: 30;
+      display: flex;
+      gap: 8px;
+    }
+
+    .pill {
+      border: 1px solid rgba(215, 180, 106, .72);
+      border-radius: 999px;
+      padding: 7px 12px;
+      background: rgba(5, 6, 8, .58);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+      backdrop-filter: blur(12px);
+    }
+
+    .slides {
+      position: relative;
+      width: 100%;
+      min-height: 52svh;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-items: center;
+      padding: 42px 22px 116px;
+      opacity: 0;
+      transform: translateY(18px);
+      pointer-events: none;
+      transition: opacity 360ms ease, transform 520ms ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .slide-inner {
+      width: min(680px, 100%);
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 16px;
+      color: var(--gold);
+      font-size: 11px;
+      letter-spacing: .26em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      letter-spacing: 0;
+      text-wrap: balance;
+      line-height: 1.05;
+      font-weight: 900;
+    }
+
+    h1 {
+      font-size: clamp(36px, 8vw, 72px);
+      max-width: 12ch;
+    }
+
+    h2 {
+      font-size: clamp(30px, 6vw, 58px);
+      max-width: 13ch;
+    }
+
+    p { margin: 0; }
+
+    .lead,
+    .body-copy {
+      margin-top: 22px;
+      color: rgba(247, 240, 229, .86);
+      font-size: clamp(15px, 2.3vw, 18px);
+      line-height: 1.9;
+    }
+
+    .note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px 28px;
+      margin-top: 34px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(215, 180, 106, .36);
+    }
+
+    .fact strong {
+      display: block;
+      font-family: var(--mono);
+      font-size: clamp(28px, 4vw, 50px);
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    .fact span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .info-list {
+      display: grid;
+      gap: 0;
+      margin-top: 28px;
+    }
+
+    .info-row {
+      display: grid;
+      grid-template-columns: minmax(76px, 108px) 1fr;
+      gap: 18px;
+      padding: 15px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .info-row b {
+      color: var(--gold);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .info-row span {
+      color: rgba(247, 240, 229, .86);
+      line-height: 1.65;
+    }
+
+    .cta-row {
+      display: grid;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .btn {
+      min-height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      border: 1px solid rgba(247, 240, 229, .22);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .055);
+      color: var(--ink);
+      text-decoration: none;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .btn.primary {
+      background: var(--cta);
+      border-color: var(--cta);
+      color: var(--cta-ink);
+      box-shadow: 0 18px 34px rgba(232, 98, 44, .28);
+    }
+
+    .faq-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    details {
+      border-top: 1px solid var(--line);
+      padding: 15px 0;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    details p {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .pager {
+      position: fixed;
+      right: max(16px, env(safe-area-inset-right));
+      top: 50%;
+      z-index: 24;
+      display: grid;
+      gap: 14px;
+      transform: translateY(-50%);
+    }
+
+    .pager button {
+      width: 54px;
+      height: 54px;
+      border-radius: 999px;
+      border: 1px solid rgba(215, 180, 106, .58);
+      background: rgba(10, 12, 16, .56);
+      color: var(--gold);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      backdrop-filter: blur(10px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .pager button:disabled {
+      opacity: .28;
+      cursor: default;
+    }
+
+    .pager button:not(:disabled):active {
+      transform: scale(.96);
+    }
+
+    .chev {
+      width: 14px;
+      height: 14px;
+      border-top: 2px solid currentColor;
+      border-left: 2px solid currentColor;
+    }
+
+    .chev.up { transform: translateY(4px) rotate(45deg); }
+    .chev.down { transform: translateY(-4px) rotate(225deg); }
+
+    .progress {
+      position: fixed;
+      left: 14px;
+      bottom: max(10px, env(safe-area-inset-bottom));
+      z-index: 22;
+      color: rgba(247, 240, 229, .68);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .sticky-cta {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      padding: 10px 84px calc(10px + env(safe-area-inset-bottom)) 14px;
+      background: rgba(5, 6, 8, .78);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+
+    .sticky-inner {
+      display: grid;
+      gap: 7px;
+      width: min(720px, 100%);
+      margin: 0 auto;
+    }
+
+    .microcopy {
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    @media (min-width: 900px) {
+      .lp-shell {
+        grid-template-columns: minmax(480px, 49.7vw) 1fr;
+      }
+
+      .visual-rail {
+        min-height: 100svh;
+        height: 100svh;
+      }
+
+      .visual-rail::after {
+        background:
+          linear-gradient(90deg, transparent 72%, rgba(5, 6, 8, .2)),
+          linear-gradient(180deg, rgba(5, 6, 8, .02), rgba(5, 6, 8, .08));
+      }
+
+      .content-rail,
+      .slides {
+        min-height: 100svh;
+        height: 100svh;
+      }
+
+      .slide {
+        padding: clamp(86px, 8vw, 126px) clamp(72px, 6vw, 112px);
+      }
+
+      .slide-inner {
+        width: min(650px, 100%);
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(46px, 3.9vw, 64px);
+      }
+
+      h2 {
+        font-size: clamp(38px, 3.4vw, 56px);
+      }
+
+      .cta-row {
+        grid-template-columns: 1.08fr .92fr .92fr;
+      }
+
+      .sticky-cta {
+        left: 49.7vw;
+        padding-left: 18px;
+      }
+
+      .sticky-inner {
+        grid-template-columns: minmax(240px, 1fr) auto;
+        align-items: center;
+      }
+
+      .microcopy {
+        text-align: right;
+      }
+    }
+
+    @media (max-width: 899px) {
+      body {
+        overflow: hidden;
+      }
+
+      .lp-shell {
+        grid-template-rows: 48svh 52svh;
+      }
+
+      .slides,
+      .content-rail {
+        min-height: 52svh;
+        height: 52svh;
+      }
+
+      .slide {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .top-tools {
+        right: 12px;
+      }
+
+      .pager {
+        right: 14px;
+      }
+
+      .pager button {
+        width: 48px;
+        height: 48px;
+      }
+
+      .facts {
+        gap: 18px 16px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .visual-layer, .slide { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-tools">
+    <div class="pill" id="langPill">繁體中文</div>
+  </div>
+
+  <div class="lp-shell">
+    <aside class="visual-rail" aria-hidden="true">
+      <div class="visual-fallback" id="visualFallback">Learning Product Visual</div>
+      <div class="visual-layer active"></div>
+      <div class="visual-layer"></div>
+    </aside>
+
+    <main class="content-rail" aria-live="polite">
+      <div class="slides" id="slides"></div>
+    </main>
+  </div>
+
+  <div class="pager" aria-label="シーン切替">
+    <button id="prevBtn" type="button" aria-label="前の内容"><span class="chev up"></span></button>
+    <button id="nextBtn" type="button" aria-label="次の内容"><span class="chev down"></span></button>
+  </div>
+
+  <div class="progress" id="progress">01 / 01</div>
+
+  <nav class="sticky-cta" aria-label="主要行動">
+    <div class="sticky-inner">
+      <a class="btn primary" id="stickyCta" href="#">看看完整內容</a>
+      <p class="microcopy" id="stickyMicrocopy">先看不用買，喜歡再說。</p>
+    </div>
+  </nav>
+
+  <script>
+    const LP_DATA = {
+      pageTitle: "學習商品LP Framework",
+      campaign: "2026-09-acts-sample",
+      engine: "ACTS",
+      productName: "巧虎雙語點讀圖鑑",
+      targetAge: "6-11M",
+      smp: "6個月就能自己點，不開螢幕也能聽中英雙語",
+      theme: "雙語啟蒙",
+      visuals: {
+        hero: "assets/product-hero.jpg",
+        empathy: "assets/empathy.jpg",
+        timing: "assets/timing.jpg",
+        value: "assets/value.jpg",
+        contents: "assets/contents.jpg",
+        faq: "assets/faq.jpg"
+      },
+      hero: {
+        eyebrow: "6-11M 寶寶雙語啟蒙",
+        title: "6個月就能自己點的雙語圖鑑",
+        lead: "不用開螢幕，也能每天聽到中英雙語聲音。先讓寶寶用手點、用耳朵聽，和家長一起翻開第一本雙語圖鑑。",
+        trustLine: "官方正版・單次購入・價格與活動以官網現行資訊為準"
+      },
+      facts: [
+        { value: "6M", label: "建議起點" },
+        { value: "4", label: "雙語圖鑑" },
+        { value: "1000+", label: "語彙收錄" },
+        { value: "非螢幕", label: "親子共讀" }
+      ],
+      sections: [
+        {
+          id: "empathy",
+          kicker: "共感",
+          title: "想給英文，又怕太早看螢幕？",
+          body: "很多家長一邊想讓寶寶早點接觸英文，一邊又擔心手機和平板變成習慣。這裡先接住矛盾，不急著推商品。",
+          visual: "assets/empathy.jpg"
+        },
+        {
+          id: "timing",
+          kicker: "月齡",
+          title: "這正是用手和耳朵認識世界的時候。",
+          body: "點一下有聲音、翻一頁有圖像。6-11M寶寶的探索，不需要先懂文字，而是從反覆聽、看、摸開始。",
+          visual: "assets/timing.jpg"
+        },
+        {
+          id: "value",
+          kicker: "價值",
+          title: "不是再多一個玩具，是每天能重複的親子共讀入口。",
+          body: "家長不用一直自己念，也不用開螢幕。點讀筆和圖鑑把中英雙語聲音、圖像和陪伴放在一起。",
+          visual: "assets/value.jpg"
+        },
+        {
+          id: "contents",
+          kicker: "內容",
+          title: "一套打開，就能開始。",
+          body: "點讀巧虎、4本雙語圖鑑與育兒誌。實際內容、價格、贈品與活動請以官網現行資訊為準。",
+          visual: "assets/contents.jpg"
+        }
+      ],
+      cta: {
+        primary: {
+          label: "看看完整內容",
+          url: "#shop",
+          intent: "shop",
+          microcopy: "先看不用買，喜歡再說。"
+        },
+        secondary: [
+          { label: "問問客服", url: "#line", intent: "support" },
+          { label: "先留一組", url: "#cart", intent: "cart" }
+        ]
+      },
+      faq: [
+        { q: "這麼小真的需要嗎？", a: "不是要寶寶立刻學會英文，而是提供標準聲音和親子共讀的開始。實際反應因孩子而異。" },
+        { q: "會不會變成看螢幕？", a: "這套主體是實體圖鑑和點讀筆，影音或音源只作為輔助，適合想降低螢幕依賴的家庭。" },
+        { q: "價格可以直接寫嗎？", a: "可以，但公開前要確認官網現行資訊。若價格、贈品或活動會變動，建議加上『以官網現行活動為準』。" }
+      ],
+      legalNote: "價格、贈品、活動期間、庫存與付款條件，請以官網現行資訊為準。文案不得使用保證成效、販賣焦慮或不實比較。"
+    };
+
+    const slidesRoot = document.getElementById("slides");
+    const stickyCta = document.getElementById("stickyCta");
+    const stickyMicrocopy = document.getElementById("stickyMicrocopy");
+    const visualFallback = document.getElementById("visualFallback");
+    const visualLayers = [...document.querySelectorAll(".visual-layer")];
+    const progress = document.getElementById("progress");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    let activeLayer = 0;
+    let activeIndex = 0;
+    let activeVisual = "";
+
+    document.title = LP_DATA.pageTitle;
+    visualFallback.textContent = LP_DATA.productName;
+    stickyCta.textContent = LP_DATA.cta.primary.label;
+    stickyCta.href = LP_DATA.cta.primary.url;
+    stickyMicrocopy.textContent = LP_DATA.cta.primary.microcopy;
+
+    function ctaRow() {
+      return `
+        <div class="cta-row">
+          <a class="btn primary" href="${LP_DATA.cta.primary.url}" data-intent="${LP_DATA.cta.primary.intent}">${LP_DATA.cta.primary.label}</a>
+          ${LP_DATA.cta.secondary.map(cta => `<a class="btn" href="${cta.url}" data-intent="${cta.intent}">${cta.label}</a>`).join("")}
+        </div>
+      `;
+    }
+
+    const slides = [
+      {
+        id: "hero",
+        visual: LP_DATA.visuals.hero,
+        html: `
+          <section class="slide active" data-visual="${LP_DATA.visuals.hero}">
+            <div class="slide-inner">
+              <p class="eyebrow">${LP_DATA.hero.eyebrow}</p>
+              <h1>${LP_DATA.hero.title}</h1>
+              <p class="lead">${LP_DATA.hero.lead}</p>
+              <div class="facts">
+                ${LP_DATA.facts.map(fact => `<div class="fact"><strong>${fact.value}</strong><span>${fact.label}</span></div>`).join("")}
+              </div>
+              <div class="info-list">
+                <div class="info-row"><b>SMP</b><span>${LP_DATA.smp}</span></div>
+                <div class="info-row"><b>Product</b><span>${LP_DATA.productName} / ${LP_DATA.targetAge}</span></div>
+                <div class="info-row"><b>Note</b><span>${LP_DATA.hero.trustLine}</span></div>
+              </div>
+              ${ctaRow()}
+            </div>
+          </section>
+        `
+      },
+      ...LP_DATA.sections.map(section => ({
+        id: section.id,
+        visual: section.visual,
+        html: `
+          <section class="slide" data-visual="${section.visual}">
+            <div class="slide-inner">
+              <p class="eyebrow">${section.kicker}</p>
+              <h2>${section.title}</h2>
+              <p class="body-copy">${section.body}</p>
+            </div>
+          </section>
+        `
+      })),
+      {
+        id: "faq",
+        visual: LP_DATA.visuals.faq,
+        html: `
+          <section class="slide" data-visual="${LP_DATA.visuals.faq}">
+            <div class="slide-inner">
+              <p class="eyebrow">FAQ</p>
+              <h2>開始前，家長最常問的事。</h2>
+              <div class="faq-list">
+                ${LP_DATA.faq.map(item => `<details><summary>${item.q}</summary><p>${item.a}</p></details>`).join("")}
+              </div>
+            </div>
+          </section>
+        `
+      },
+      {
+        id: "action",
+        visual: LP_DATA.visuals.hero,
+        html: `
+          <section class="slide" data-visual="${LP_DATA.visuals.hero}">
+            <div class="slide-inner">
+              <p class="eyebrow">Next step</p>
+              <h2>先用最輕鬆的方式，看看適不適合孩子。</h2>
+              <p class="body-copy">${LP_DATA.legalNote}</p>
+              ${ctaRow()}
+            </div>
+          </section>
+        `
+      }
+    ];
+
+    slidesRoot.innerHTML = slides.map(slide => slide.html).join("");
+    const slideEls = [...document.querySelectorAll(".slide")];
+
+    function setVisual(src) {
+      if (!src || src === activeVisual) return;
+      activeVisual = src;
+      const next = visualLayers[1 - activeLayer];
+      const current = visualLayers[activeLayer];
+      next.style.setProperty("--image", `url("${src}")`);
+      next.classList.add("active");
+      current.classList.remove("active");
+      activeLayer = 1 - activeLayer;
+    }
+
+    function showSlide(index) {
+      activeIndex = Math.max(0, Math.min(slideEls.length - 1, index));
+      slideEls.forEach((slide, i) => slide.classList.toggle("active", i === activeIndex));
+      setVisual(slideEls[activeIndex].dataset.visual);
+      progress.textContent = `${String(activeIndex + 1).padStart(2, "0")} / ${String(slideEls.length).padStart(2, "0")}`;
+      prevBtn.disabled = activeIndex === 0;
+      nextBtn.disabled = activeIndex === slideEls.length - 1;
+    }
+
+    prevBtn.addEventListener("click", () => showSlide(activeIndex - 1));
+    nextBtn.addEventListener("click", () => showSlide(activeIndex + 1));
+
+    window.addEventListener("keydown", event => {
+      if (event.key === "ArrowUp" || event.key === "PageUp") showSlide(activeIndex - 1);
+      if (event.key === "ArrowDown" || event.key === "PageDown" || event.key === " ") showSlide(activeIndex + 1);
+    });
+
+    let touchStartY = null;
+    window.addEventListener("touchstart", event => {
+      touchStartY = event.touches[0]?.clientY ?? null;
+    }, { passive: true });
+
+    window.addEventListener("touchend", event => {
+      if (touchStartY == null) return;
+      const endY = event.changedTouches[0]?.clientY ?? touchStartY;
+      const diff = touchStartY - endY;
+      if (Math.abs(diff) > 54) showSlide(activeIndex + (diff > 0 ? 1 : -1));
+      touchStartY = null;
+    }, { passive: true });
+
+    showSlide(0);
+  </script>
+</body>
+</html>
+

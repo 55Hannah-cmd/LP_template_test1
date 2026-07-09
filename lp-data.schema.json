@@ -1,0 +1,77 @@
+{
+  "pageTitle": "string",
+  "campaign": "string",
+  "engine": "ACTS | ABDT",
+  "productName": "string",
+  "targetAge": "string",
+  "smp": "string",
+  "theme": "string",
+  "navigation": {
+    "mode": "stepper",
+    "defaultVisualSync": true,
+    "controls": [
+      "upButton",
+      "downButton",
+      "keyboard",
+      "swipe"
+    ]
+  },
+  "visuals": {
+    "hero": "assets/product-hero.jpg",
+    "empathy": "assets/empathy.jpg",
+    "timing": "assets/timing.jpg",
+    "value": "assets/value.jpg",
+    "contents": "assets/contents.jpg",
+    "faq": "assets/faq.jpg"
+  },
+  "hero": {
+    "eyebrow": "string",
+    "title": "string",
+    "lead": "string",
+    "trustLine": "string"
+  },
+  "facts": [
+    {
+      "label": "string",
+      "value": "string"
+    }
+  ],
+  "sections": [
+    {
+      "id": "empathy",
+      "kicker": "共感",
+      "title": "string",
+      "body": "string",
+      "visual": "assets/empathy.jpg"
+    },
+    {
+      "id": "value",
+      "kicker": "学習価値",
+      "title": "string",
+      "body": "string",
+      "visual": "assets/value.jpg"
+    }
+  ],
+  "cta": {
+    "primary": {
+      "label": "string",
+      "url": "string",
+      "intent": "shop | support | cart",
+      "microcopy": "string"
+    },
+    "secondary": [
+      {
+        "label": "string",
+        "url": "string",
+        "intent": "support | shop | cart"
+      }
+    ]
+  },
+  "faq": [
+    {
+      "q": "string",
+      "a": "string"
+    }
+  ],
+  "legalNote": "string"
+}
