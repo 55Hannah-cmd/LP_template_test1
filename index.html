@@ -101,26 +101,6 @@
       overflow: hidden;
     }
 
-    .top-tools {
-      position: fixed;
-      top: max(12px, env(safe-area-inset-top));
-      right: 16px;
-      z-index: 30;
-      display: flex;
-      gap: 8px;
-    }
-
-    .pill {
-      border: 1px solid rgba(215, 180, 106, .72);
-      border-radius: 999px;
-      padding: 7px 12px;
-      background: rgba(5, 6, 8, .58);
-      color: var(--ink);
-      font-size: 12px;
-      font-weight: 800;
-      backdrop-filter: blur(12px);
-    }
-
     .slides {
       position: relative;
       width: 100%;
@@ -460,10 +440,6 @@
         -webkit-overflow-scrolling: touch;
       }
 
-      .top-tools {
-        right: 12px;
-      }
-
       .pager {
         right: 14px;
       }
@@ -484,10 +460,6 @@
   </style>
 </head>
 <body>
-  <div class="top-tools">
-    <div class="pill" id="langPill">繁體中文</div>
-  </div>
-
   <div class="lp-shell">
     <aside class="visual-rail" aria-hidden="true">
       <div class="visual-fallback" id="visualFallback">Learning Product Visual</div>
@@ -735,4 +707,3 @@
   </script>
 </body>
 </html>
-
